@@ -2,8 +2,7 @@
 friends_of_tracking
 ===================
 
-
-Add a short description here!
+This repository builds on the Friends Of Tracking Data repo run by David Sumpter, Sudarshan Gopaladesikan, & Laurie D Shaw.
 
 
 Description
