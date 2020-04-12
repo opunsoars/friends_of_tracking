@@ -48,3 +48,9 @@ MANIFEST
 
 # Per-project virtualenvs
 .venv*/
+
+# data
+datahub/statsbomb/*
+datahub/metrica_sports/*
+datahub/wyscout_figshare/*/*.json
+datahub/wyscout_figshare/*/*.csv
