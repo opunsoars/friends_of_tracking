@@ -1,4 +1,5 @@
 {
     "restructuredtext.confPath": "${workspaceFolder}/docs",
-    "python.pythonPath": "/home/csivsw/anaconda3/envs/kickoff/bin/python"
+    "python.pythonPath": "/home/csivsw/anaconda3/envs/kickoff/bin/python",
+    "python.dataScience.jupyterServerURI": "local"
 }
