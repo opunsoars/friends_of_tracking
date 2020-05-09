@@ -11,8 +11,8 @@ pd.DataFrame([[play,
                data_attack.loc[play].index[0], 
                data_attack.loc[play].index[-1]] for play in data_attack.index.get_level_values(0).unique()], columns=['PLAY','SCORE','START','END']).to_dict(orient='records')
 '''
-MATCH = 18
-
+MATCH = 2
+SCORER=False
 LIV_GOALS = [{'PLAY': 'Bayern 0 - [1] Liverpool',
               'SCORE': 'BAY 0 [1] LIV',
               'START': 0,
@@ -89,6 +89,18 @@ LIV_GOALS = [{'PLAY': 'Bayern 0 - [1] Liverpool',
               'SCORE': 'SOU 1 [2] LIV',
               'START': 0,
               'END': 256}]
+
+# PITCH VIZ PARAMS
+FIELD_WIDTH=1000
+FIELD_HEIGHT=700
+FIELD_DIM = (106.0, 68.0)
+
+# FIELD_COLOR = 'mediumseagreen'
+# FIELD_MARKINGS_COLOR = 'White'
+
+FIELD_COLOR = 'White'
+FIELD_MARKINGS_COLOR = 'black'
+
 
 PLAYERMARKERSIZE = 20
 player_marker_args = {'Home': dict(mode='markers+text',
