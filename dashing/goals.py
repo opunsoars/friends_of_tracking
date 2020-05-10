@@ -74,10 +74,27 @@ app.layout = html.Div(
                     id="left-column",
                     className="six columns",
                     children=[
+                        html.P(id="heatmap-selector", children="Select goal:"),
+                        dcc.Dropdown(
+                            id="chart-dropdown",
+                            value="Bayern 0 - [1] Liverpool",
+                            options=[
+                                {"label": goal['PLAY'],
+                                 "value":goal['PLAY']} for goal in LIV_GOALS
+                            ],
+                        ),
+                        dcc.RadioItems(
+                            id='scorer-radio-selector',
+                            options=[{'label': 'All Players', 'value': 'False'},
+                                     {'label': 'Goalscorer', 'value': 'True'}],
+                            value='False',
+                            labelStyle={'display': 'inline-block'}
+                        ),
                         html.Div(
                             id="heatmap-container",
                             children=[
-                                html.H6(children="{}".format(LIV_GOALS[MATCH]['PLAY'])),
+                                # html.H6(children="{}".format(
+                                #     LIV_GOALS[MATCH]['PLAY'])),
                                 html.P(
                                     id="heatmap-text",
                                     children="Press play to view the goal",
@@ -95,10 +112,10 @@ app.layout = html.Div(
                     id="right-column",
                     className="six columns",
                     children=[
-                        html.P(
-                            id="chart-selector",
-                               children="Select chart:"
-                        ),
+                        # html.P(
+                        #     id="chart-selector",
+                        #        children="Select chart:"
+                        # ),
                         dcc.Graph(
                             id='home-player-speed-bar',
                             figure=bar[0]
@@ -140,20 +157,90 @@ def display_value(value):
     return 'Frame: {}'.format(value)
 
 
+# @app.callback(
+#     Output('pitch-control-heatmap', 'figure'),
+#     [Input('chart-dropdown', 'value')])
+# def load_match_plot(play):
+#     # LOAD DASH DATA FOR MATCH
+#     with open('../datahub/lastrow/figs/{}.pkl'.format(play), 'rb') as handle:
+#         dash_dict = cloudpickle.load(handle)
+#         handle.close()
+#     hmap = dash_dict['hmap']['white']
+#     return hmap
+
+# @app.callback(
+#     Output('pitch-control-heatmap', 'figure'),
+#     [Input('scorer-radio-selector', 'value')])
+# def update_scorer(scorer):
+#     if scorer == 'True':
+#         hmap = dash_dict['hmap']['white_scorer']
+#     else:
+#         hmap = dash_dict['hmap']['white']
+
+#     return hmap
+
+# @app.callback(
+#     Output('pitch-control-heatmap', 'figure'),
+#     [Input('frame-slider', 'value')])
+# def update_graph(frame_value):
+#     update = {
+#         "data": [],
+#         "layout": {},
+#     }
+
+#     update['layout'] = hmap['layout']
+#     update['data'] = hmap['frames'][frame_value]['data']
+#     # update['data'] = generate_data_for_frame(frame_num=frame_value)
+
+#     return update
+
 @app.callback(
     Output('pitch-control-heatmap', 'figure'),
-    [Input('frame-slider', 'value')])
-def update_graph(frame_value):
-    update = {
-        "data": [],
-        "layout": {},
-    }
+    [Input('chart-dropdown', 'value'),
+     Input('scorer-radio-selector', 'value'),
+     Input('frame-slider', 'value')])
+def update_graph(play, scorer, frame_value):
+    ctx = dash.callback_context
+    if not ctx.triggered:
+        # Handle initial firing on page load - do not update options
+        return dash.no_update, dash.no_update
+    print (ctx.triggered)
 
-    update['layout'] = hmap['layout']
-    update['data'] = hmap['frames'][frame_value]['data']
-    # update['data'] = generate_data_for_frame(frame_num=frame_value)
+    if ctx.triggered[0]['prop_id'] == 'chart-dropdown.value':
+        # LOAD DASH DATA FOR MATCH
+        with open('../datahub/lastrow/figs/{}.pkl'.format(play), 'rb') as handle:
+            dash_dict = cloudpickle.load(handle)
+            handle.close()    
+        hmap = dash_dict['hmap']['white']
+        return hmap
 
-    return update
+    elif ctx.triggered[0]['prop_id'] == 'scorer-radio-selector.value':
+        # LOAD DASH DATA FOR MATCH
+        with open('../datahub/lastrow/figs/{}.pkl'.format(play), 'rb') as handle:
+            dash_dict = cloudpickle.load(handle)
+            handle.close() 
+        if scorer == 'True':
+            hmap = dash_dict['hmap']['white_scorer']
+        else:
+            hmap = dash_dict['hmap']['white']
+
+        return hmap
+
+    elif ctx.triggered[0]['prop_id'] == 'frame-slider.value':
+        update = {
+            "data": [],
+            "layout": {},
+        }
+
+        update['layout'] = hmap['layout']
+        update['data'] = hmap['frames'][frame_value]['data']
+        # update['data'] = generate_data_for_frame(frame_num=frame_value)
+
+        return update
+    
+    else:
+        # need to ensure all paths have return value
+        return dash.no_update, dash.no_update
 
 
 @app.callback(

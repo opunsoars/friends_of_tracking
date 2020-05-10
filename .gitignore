@@ -54,3 +54,6 @@ datahub/statsbomb/*
 datahub/metrica_sports/*
 datahub/wyscout_figshare/*/*.json
 datahub/wyscout_figshare/*/*.csv
+datahub/lastrow/*.pkl
+datahub/lastrow/*.pickle
+output/*.mp4
