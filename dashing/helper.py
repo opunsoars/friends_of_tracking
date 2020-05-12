@@ -218,7 +218,7 @@ def generate_pitch_layout(tracking_frames=None, field_dimen=FIELD_DIM):
     layout = go.Layout(
         # title='Goal: {}'.format(LIV_GOALS[MATCH]['PLAY']),
         hovermode='closest',
-        autosize=False,
+        autosize=True,
         width=FIELD_WIDTH,
         height=FIELD_HEIGHT,
         plot_bgcolor=FIELD_COLOR,
@@ -379,62 +379,45 @@ def generate_bar_data_for_frame(tracking_home, tracking_away, pitch_control_dict
     hometeam = tracking_home
     awayteam = tracking_away
     # pick only the columns representing players whose data is available for this match
-    homeplayers = [c[:-1] for c in hometeam[[c for c in hometeam.columns if c.startswith(
+    homeplayers = [c.split('_')[1] for c in hometeam[[c for c in hometeam.columns if c.startswith(
         'Home') & c.endswith('_x')]].dropna(1).columns]
-    awayplayers = [c[:-1] for c in awayteam[[c for c in awayteam.columns if c.startswith(
+    awayplayers = [c.split('_')[1] for c in awayteam[[c for c in awayteam.columns if c.startswith(
         'Away') & c.endswith('_x')]].dropna(1).columns]
 
     for p in homeplayers:
-        hometeam[p+'_speed_max'] = hometeam[p+'speed'].cummax()
+        hometeam['Home_{}_speed_max'.format(p)] = hometeam['Home_{}_speed'.format(p)].cummax()
     for p in awayplayers:
-        awayteam[p+'_speed_max'] = awayteam[p+'speed'].cummax()
+        awayteam['Away_{}_speed_max'.format(p)] = awayteam['Away_{}_speed'.format(p)].cummax()
 
     hometeam = hometeam.loc[frame_num]
-    velocity_indices = [c for c in hometeam.index if c.endswith('speed')]
-    max_velocity_indices = [
-        c for c in hometeam.index if c.endswith('speed_max')]
-    homespeeds = hometeam[velocity_indices].dropna().reset_index()
-    homespeeds = pd.concat([hometeam[velocity_indices].dropna(
-    ).reset_index(), hometeam[max_velocity_indices].reset_index()], axis=1)
-    homespeeds['player'] = homespeeds.iloc[:, 0].apply(
-        lambda x: 'HP{}'.format(x.split('_')[1]))
-    homespeeds['side'] = 'Home'
-    homespeeds['color'] = '#c8102E'
-    homespeeds = homespeeds.iloc[:, [4, 1, 3, 5, 6]]
-    homespeeds.columns = ['player', 'speed', 'speed_max', 'side', 'color']
-    homespeeds['PC'] = homespeeds['player'].apply(
-        lambda x: -10*pitch_control_dict[frame_num]['PPCFa_pax'][x[2:]].mean())
+    homespeeds = pd.DataFrame(['HP'+x for x in homeplayers], columns = ['player'])
+    homespeeds['speed'] = homespeeds.player.apply(lambda p: hometeam['Home_{}_speed'.format(p[2:])])
+    homespeeds['speed_max'] = homespeeds.player.apply(lambda p: hometeam['Home_{}_speed_max'.format(p[2:])])
+    homespeeds['side'] = 'Home'; homespeeds['color'] = '#c8102E'
+    homespeeds['PC'] = homespeeds['player'].apply(lambda x: -10*pitch_control_dict[frame_num]['PPCFa_pax'][x[2:]].mean())
 
     awayteam = awayteam.loc[frame_num]
-    velocity_indices = [c for c in awayteam.index if c.endswith('speed')]
-    max_velocity_indices = [
-        c for c in awayteam.index if c.endswith('speed_max')]
-    awayspeeds = awayteam[velocity_indices].dropna().reset_index()
-    awayspeeds = pd.concat([awayteam[velocity_indices].dropna(
-    ).reset_index(), awayteam[max_velocity_indices].reset_index()], axis=1)
-    awayspeeds['player'] = awayspeeds.iloc[:, 0].apply(
-        lambda x: 'AP{}'.format(x.split('_')[1]))
-    awayspeeds['side'] = 'Away'
-    awayspeeds['color'] = '#2196f3'
-    awayspeeds = awayspeeds.iloc[:, [4, 1, 3, 5, 6]]
-    awayspeeds.columns = ['player', 'speed', 'speed_max', 'side', 'color']
-    awayspeeds['PC'] = 0
+    awayspeeds = pd.DataFrame(['AP'+x for x in awayplayers], columns = ['player'])
+    awayspeeds['speed'] = awayspeeds.player.apply(lambda p: awayteam['Away_{}_speed'.format(p[2:])])
+    awayspeeds['speed_max'] = awayspeeds.player.apply(lambda p: awayteam['Away_{}_speed_max'.format(p[2:])])
+    awayspeeds['side'] = 'Away'; awayspeeds['color'] = '#2196f3'
+    awayspeeds['PC'] = 0     
 
     speeds = homespeeds.append(awayspeeds)
     # print (speeds)
     trace0 = go.Bar(x=speeds.player, y=speeds.speed,
                     marker_color=speeds.color, name='speeds')
     trace1 = go.Bar(x=speeds.player, y=speeds.PC,
-                    marker_color='indianred', name='pitch-control x 10')
-    trace2 = go.Bar(x=speeds.player, y=[0.2 for s in speeds.player], base=speeds.speed_max,
-                    marker_color="#4caf50", marker_line_width=1, marker_line_color='#212121', name='speed_max')
+                    marker_color='indianred', name='10x mean pitch-control')
+    trace2 = go.Bar(x=speeds.player, y=[0.1 for s in speeds.player], base=speeds.speed_max,
+                    marker_color="yellow", marker_line_width=1, marker_line_color='#212121', name='speed_max')
     data = [trace0, trace1, trace2]
 
     return data
 
 
 def generate_bar_layout():
-    layout = go.Layout(title='Player velocities for Liverpool & opposition',
+    layout = go.Layout(title='Player velocities for Liverpool(HP) & opposition(AP)',
                        xaxis_tickfont_size=14,
                        yaxis=dict(
                            title='Pitch Control <--|--> Speed (m/s)',
@@ -442,10 +425,11 @@ def generate_bar_layout():
                            tickfont_size=14,
                        ),
                        legend=dict(
-                           x=1,
-                           y=1.0,
+                           x=0,
+                           y=1.2,
                            bgcolor='rgba(255, 255, 255, 0)',
-                           bordercolor='rgba(255, 255, 255, 0)'
+                           bordercolor='rgba(255, 255, 255, 0)',
+                           orientation='h'
                        ),
                        autosize=True,
                        width=800,

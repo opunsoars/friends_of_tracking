@@ -5,8 +5,8 @@ from params import LIV_GOALS, MATCH
 # generate for 1P or allP and save in ../datahub/lastrow
 # generate green for allP and white for 1P / allP
 
-# MATCH = 1
-PLAYER = 1  # GOALSCORER #None
+# MATCH = 0
+PLAYER = LIV_GOALS[MATCH]['PLAYER']# GOALSCORER #None
 PLAY = LIV_GOALS[MATCH]['PLAY']
 event_start_frame = LIV_GOALS[MATCH]['START']
 event_end_frame = LIV_GOALS[MATCH]['END']
